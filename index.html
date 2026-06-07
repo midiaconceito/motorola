@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --cyan: #00e5ff; 
+            --pink: #ff0055; 
+            --blue: #2979ff;
+            --dark: #020306;
+            --glass: rgba(15, 20, 30, 0.5);
+            --glass-border: rgba(0, 229, 255, 0.15);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body, html {
+            width: 100%; height: 100%;
+            background-color: var(--dark);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden; 
+        }
+
+        #bg-lights {
+            position: fixed; inset: 0; z-index: -1;
+            background: 
+                radial-gradient(circle at 15% 30%, rgba(0, 229, 255, 0.05), transparent 40%),
+                radial-gradient(circle at 85% 70%, rgba(255, 0, 85, 0.05), transparent 40%);
+        }
+
+        #screen-container {
+            position: fixed; inset: 0;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; perspective: 1500px;
+        }
+
+        #master-scale {
+            width: 1600px; height: 900px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .scene {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transform-style: preserve-3d;
+        }
+        .scene.ativo {
+            opacity: 1; visibility: visible; pointer-events: auto;
+        }
+
+        .glass-box-split {
+            background: var(--glass); backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); border-radius: 30px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 40px rgba(0, 229, 255, 0.03);
+            max-width: 1400px; width: 100%; 
+            height: 650px; 
+            display: flex; flex-direction: row; overflow: hidden;
+        }
+        
+        .split-content {
+            flex: 1.2; padding: 60px; display: flex; flex-direction: column; justify-content: center; text-align: left;
+        }
+        
+        .img-showcase {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px; 
+            background: transparent; 
+        }
+        .img-showcase.right { border-left: 1px solid var(--glass-border); }
+        .img-showcase.left { border-right: 1px solid var(--glass-border); }
+        
+        .img-showcase img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8)); 
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .img-showcase img:hover {
+            transform: scale(1.04); 
+        }
+
+        /* 1. SUPERPODER DE ZOOM */
+        .img-showcase img.zoom-master {
+            transform: scale(1.6); 
+        }
+        
+        /* 2. O MOTOR DE FÍSICA DA VIBRAÇÃO DO CELULAR */
+        @keyframes vibrate-ring {
+            0% { transform: scale(1.6) translate(0) rotate(0deg); }
+            20% { transform: scale(1.6) translate(-2px, 2px) rotate(-2deg); }
+            40% { transform: scale(1.6) translate(-2px, -2px) rotate(2deg); }
+            60% { transform: scale(1.6) translate(2px, 2px) rotate(0deg); }
+            80% { transform: scale(1.6) translate(2px, -2px) rotate(2deg); }
+            100% { transform: scale(1.6) translate(0) rotate(0deg); }
+        }
+
+        /* Gatilho da vibração: ao passar o mouse */
+        .img-showcase img.zoom-master.ringing:hover {
+            /* 0.1s é a velocidade do tremor, rápido igual motor de celular */
+            animation: vibrate-ring 0.1s linear infinite; 
+            cursor: pointer;
+        }
+
+        .glass-box {
+            background: var(--glass); backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); border-radius: 30px;
+            padding: 50px 70px; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            text-align: center; max-width: 1400px; width: 100%; max-height: 750px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .glass-panel {
+            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 30px; text-align: left; height: 100%;
+        }
+
+        .neon-cyan { color: var(--cyan); text-shadow: 0 0 20px rgba(0, 229, 255, 0.5); }
+        .neon-pink { color: var(--pink); text-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
+        
+        h1 { font-size: 4.5rem; font-weight: 900; line-height: 1.1; text-transform: uppercase; letter-spacing: -2px; margin-bottom: 20px;}
+        h2 { font-size: 2.8rem; font-weight: 800; margin-bottom: 20px; color: var(--cyan); }
+        h3 { font-size: 1.8rem; font-weight: 700; margin-bottom: 15px; color: #fff; line-height: 1.3;}
+        p { font-size: 1.4rem; font-weight: 300; line-height: 1.6; color: #cbd5e1; margin-bottom: 20px;}
+        ul { font-size: 1.4rem; text-align: left; line-height: 1.8; color: #cbd5e1; padding-left: 25px; margin: 10px 0; }
+        li { margin-bottom: 8px; }
+
+        .flex-row { display: flex; gap: 30px; width: 100%; justify-content: center; align-items: stretch; margin-top: 20px; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        
+        .floating-icon {
+            font-size: 5rem; margin-bottom: 15px; display: inline-block;
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        .counter-grid { display: flex; gap: 20px; justify-content: flex-start; margin-top: 20px; width: 100%; }
+        .counter-box {
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(255, 0, 85, 0.4);
+            border-radius: 20px; padding: 20px; flex: 1; text-align: center;
+        }
+        .num { font-size: 4.5rem; font-weight: 900; color: var(--pink); line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 30px rgba(255, 0, 85, 0.5);}
+        .num-label { font-size: 1.1rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 10px;}
+
+        .chart-container { width: 100%; height: 350px; margin-top: 20px; }
+        .moto-badge { text-align: center; padding: 25px 20px; flex: 1; border-radius: 15px; border-bottom: 4px solid; background: rgba(0,0,0,0.4); }
+
+        #ignicao {
+            position: fixed; inset: 0; background: var(--dark); z-index: 10000;
+            display: flex; justify-content: center; align-items: center; flex-direction: column; text-align: center;
+        }
+        .btn-start {
+            padding: 20px 80px; font-size: 2rem; font-weight: 900; color: var(--cyan);
+            background: transparent; border: 2px solid var(--cyan); border-radius: 50px;
+            cursor: pointer; transition: 0.4s; text-transform: uppercase; letter-spacing: 4px;
+        }
+        .btn-start:hover { background: var(--cyan); color: #000; box-shadow: 0 0 50px var(--cyan); transform: scale(1.05); }
+
+        #hud {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; z-index: 9999;
+            background: rgba(0,0,0,0.5); padding: 15px 30px; border-radius: 50px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: #444; transition: 0.3s; cursor: pointer; }
+        .dot.ativo { background: var(--cyan); box-shadow: 0 0 15px var(--cyan); transform: scale(1.5); }
+
+        #speech-notes {
+            position: fixed; top: 30px; right: 30px; width: 450px;
+            background: rgba(0,0,0,0.85); border-left: 4px solid var(--cyan);
+            padding: 25px; border-radius: 10px; font-size: 1.3rem; color: #ccc;
+            z-index: 9999; backdrop-filter: blur(15px); display: none; line-height: 1.6;
+        }
+        
+        .anim-element { opacity: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- AQUI ESTÁ O RÁDIO INVISÍVEL -->
+    <!-- Se o seu áudio não for .mp3 (for .wav por exemplo), mude apenas o final do src abaixo -->
+    <audio id="audio-dynatac" src="img/toque 8000X.mpeg" loop preload="auto"></audio>
+
+    <div id="bg-lights"></div>
+
+    <div id="ignicao">
+        <h1 class="neon-cyan" style="font-size: 5rem; margin-bottom: 20px;">MOTOROLA</h1>
+        <!--p style="font-size: 1.8rem; color: #aaa; margin-bottom: 50px; letter-spacing: 4px; text-transform: uppercase;">Cinematic Masterclass</p-->
+        <button class="btn-start" onclick="iniciarMasterclass()">Iniciar Jornada</button>
+        <!-- p style="margin-top: 40px; color: #666; font-size: 1.2rem;">(Pressione 'N' para ler seu roteiro durante a apresentação)</p-->
+    </div>
+
+    <!-- HUD DE ROTEIRO -->
+    <div id="speech-notes">
+        <strong style="color: var(--cyan); display: block; margin-bottom: 15px; font-size: 1.2rem; letter-spacing: 2px;">🎙️ ROTEIRO DO APRESENTADOR:</strong>
+        <span id="speech-text"></span>
+    </div>
+
+    <div id="screen-container">
+        <div id="master-scale">
+            
+            <!-- CENA 0: INTRODUÇÃO -->
+            <div class="scene" id="cena-0" data-speech="Boa noite a todos. Convido vocês a uma jornada imersiva pela história da Motorola. Uma empresa cuja trajetória se confunde com a própria evolução das comunicações modernas.">
+                <div class="glass-box">
+                    <div class="floating-icon anim-element">🚀</div>
+                    <h1 class="neon-cyan anim-element">A História da Motorola</h1>
+                    <h2 class="anim-element">Evolução Tecnológica ao Longo do Tempo</h2>
+                    <p class="anim-element" style="text-align: center; margin: 0 auto; font-size: 1.6rem;">A Motorola é uma das empresas mais importantes da história da tecnologia. Sua trajetória acompanha a evolução das comunicações modernas, desde rádios automotivos até smartphones conectados à inteligência artificial.</p>
+                </div>
+            </div>
+
+            <!-- CENA 1: FUNDAÇÃO -->
+            <div class="scene" id="cena-1" data-speech="Tudo começou em 1928, com os irmãos Paul e Joseph Galvin. Eles criaram algo revolucionário: rádios automotivos acessíveis. Numa época em que rádio era luxo, eles democratizaram o som nos carros.">
+                <div class="glass-box-split" style="border-color: rgba(41, 121, 255, 0.4);">
+                    <div class="split-content anim-element">
+                        <h1 style="font-size: 3.5rem;">Fundação e Primeiros Anos</h1>
+                        <h2 style="font-size: 2.2rem; margin-bottom: 30px;">(1928–1940)</h2>
+                        
+                        <h3 style="color: var(--cyan);">O Sucesso do Rádio Automotivo</h3>
+                        <p>A Galvin Manufacturing Corporation inovou criando soluções acessíveis e compactas. Em uma época em que rádios eram caros, eles democratizaram o áudio nos veículos.</p>
+                        
+                        <h3 style="margin-top: 20px; color: var(--cyan);">A Origem do Nome (1930)</h3>
+                        <ul>
+                            <li><b style="color:#fff;">Motor:</b> Relacionado aos automóveis.</li>
+                            <li><b style="color:#fff;">Ola:</b> Sufixo popular de equipamentos sonoros.</li>
+                        </ul>
+                    </div>
+                    <div class="img-showcase right anim-element">
+                        <img src="img/radio-antigo.jpg" alt="Rádio Antigo">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 2: A GUERRA -->
+            <div class="scene" id="cena-2" data-speech="Nos anos 40, o mundo estava em guerra. O Handie-Talkie SCR-536 melhorou a comunicação das tropas e provou que o futuro exigia mobilidade.">
+                <div class="glass-box-split" style="border-color: rgba(76, 175, 80, 0.4);">
+                    <div class="img-showcase left anim-element">
+                        <img src="img/comunicacao-guerra.jpg" alt="Comunicação na Guerra">
+                    </div>
+                    <div class="split-content anim-element" style="flex: 1.2;">
+                        <div class="floating-icon" style="font-size: 4rem;">🪖</div>
+                        <h2 style="color: #4CAF50; font-size: 2.5rem;">Avanços na 2ª Guerra Mundial</h2>
+                        <h1 style="font-size: 3.5rem; margin-bottom: 20px;">Handie-Talkie SCR-536</h1>
+                        <p>Considerado o <b>primeiro rádio portátil de comunicação em massa</b> da história.</p>
+                        <ul style="margin-top: 15px;">
+                            <li>Melhorou drasticamente a comunicação entre tropas.</li>
+                            <li>Tornou-se o precursor dos atuais walkie-talkies.</li>
+                            <li>Demonstrou o poder absoluto da mobilidade nas telecomunicações.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 3: TV E PAGER -->
+            <div class="scene" id="cena-3" data-speech="Após a guerra, o marco ocorreu em 1956: o lançamento do primeiro pager comercial do mundo. Nascia a era da comunicação pessoal móvel.">
+                <div class="glass-box">
+                    <h1 class="anim-element" style="font-size: 4rem;">Televisão e Eletrônicos</h1>
+                    <p class="anim-element" style="text-align: center; color: var(--cyan); font-weight: 700; font-size: 1.8rem;">(1950–1970)</p>
+                    <div class="flex-row">
+                        <div class="col anim-element">
+                            <div class="glass-panel">
+                                <h3>Expansão de Consumo</h3>
+                                <ul>
+                                    <li>Televisores de tubo e Rádios domésticos</li>
+                                    <li>Equipamentos eletrônicos residenciais</li>
+                                    <li>Sistemas de comunicação para órgãos públicos</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col anim-element">
+                            <div class="glass-panel" style="border-color: var(--pink); text-align: center; align-items: center;">
+                                <div class="floating-icon" style="font-size: 4rem;">📟</div>
+                                <h3 class="neon-pink" style="font-size: 2.5rem;">O Marco de 1956</h3>
+                                <p style="text-align: center; font-weight: 700; color: #fff; margin:0;">A Motorola lançou o primeiro pager comercial do mundo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 4: O ESPAÇO -->
+            <div class="scene" id="cena-4" data-speech="Em 1969, a transmissão do primeiro passo de Neil Armstrong na Lua foi realizada com tecnologia da Motorola. O céu não era mais o limite.">
+                <div class="glass-box-split" style="border-color: #fff;">
+                    <div class="split-content anim-element">
+                        <h2 style="color: #fff; font-size: 2.8rem;">A Corrida Espacial (1960–1970)</h2>
+                        <h1 style="font-size: 3.5rem; font-style: italic; font-weight: 300; text-transform: none; color: #fff; letter-spacing: 0; margin: 20px 0;">
+                            "Um pequeno passo para o homem..."
+                        </h1>
+                        <div style="background: rgba(0, 229, 255, 0.1); padding: 25px; border-left: 5px solid var(--cyan); border-radius: 10px;">
+                            <p style="margin:0; font-size: 1.5rem; color: #fff;">Em 1969, a transmissão das palavras de Neil Armstrong na Lua foi realizada utilizando tecnologia desenvolvida pela Motorola.</p>
+                        </div>
+                    </div>
+                    <div class="img-showcase right anim-element">
+                        <img src="img/corrida-espacial.jpg" alt="Astronauta">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 5: O CELULAR (AGORA COM ID E CLASSES DE ANIMAÇÃO) -->
+            <div class="scene" id="cena-5" data-speech="Em 1973, Martin Cooper faz a primeira chamada de um celular. O DynaTAC pesava um quilo, mas mudou a história da humanidade.">
+                <div class="glass-box-split" style="border-color: rgba(255, 0, 85, 0.4);">
+                    <div class="img-showcase left anim-element" style="flex: 0.9;">
+                        <!-- O ID é necessário pro JS achar. As classes dão o tamanho e a vibração -->
+                        <img src="img/primeiro-celular.png" alt="Primeiro Celular DynaTAC" id="img-dynatac" class="zoom-master ringing">
+                    </div>
+                    <div class="split-content anim-element" style="flex: 1.3;">
+                        <h1 class="neon-pink" style="font-size: 3.5rem;">O Nascimento do Celular</h1>
+                        <h2 style="font-size: 2.2rem; margin-bottom: 20px; color: #ccc;">(1973–1990)</h2>
+                        <p>Em 1973, o engenheiro Martin Cooper realizou a primeira chamada com um celular portátil. O aparelho era o protótipo histórico <b>Motorola DynaTAC 8000X</b>.</p>
+                        
+                        <div class="counter-grid">
+                            <div class="counter-box">
+                                <div class="num gsap-counter" data-target="1">0</div>
+                                <div class="num-label">Quilo (Aprox.)</div>
+                            </div>
+                            <div class="counter-box">
+                                <div class="num gsap-counter" data-target="30">0</div>
+                                <div class="num-label">Min. Bateria</div>
+                            </div>
+                            <div class="counter-box">
+                                <div class="num gsap-counter" data-target="10">0</div>
+                                <div class="num-label">Hrs Recarga</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 20px; font-weight: 700; color: var(--pink); letter-spacing: 2px;">PREÇO EXTREMAMENTE ELEVADO</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 6: STARTAC -->
+            <div class="scene" id="cena-6" data-speech="Nos anos 90, o StarTAC dominou o mundo. O primeiro celular flip: compacto, leve e revolucionário.">
+                <div class="glass-box-split" style="border-color: rgba(0, 229, 255, 0.4);">
+                    <div class="split-content anim-element">
+                        <h2 class="neon-cyan" style="font-size: 3rem;">Liderança na Telefonia</h2>
+                        <p style="margin-bottom: 30px;">Durante os anos 1990, a Motorola tornou-se a maior fabricante do planeta.</p>
+                        
+                        <div class="glass-panel" style="border-top: 4px solid var(--cyan); padding: 30px;">
+                            <h3 style="color: var(--cyan); font-size: 2rem;">Produto Marcante: StarTAC</h3>
+                            <p style="color: #fff; font-weight: 700; margin-bottom: 10px;">Principais Inovações:</p>
+                            <ul>
+                                <li>Design dobrável (flip phone) que virou ícone pop.</li>
+                                <li>Extremamente Compacto e Leve.</li>
+                                <li>Tecnologia digital avançada na palma da mão.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="img-showcase right anim-element">
+                        <img src="img/celular-flip.png" alt="Celular Flip StarTAC">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 7: RAZR V3 -->
+            <div class="scene" id="cena-7" data-speech="Em 2004, a Motorola redefiniu o design com o RAZR V3. Um artigo de luxo ultrafino que vendeu mais de 130 milhões de unidades.">
+                <div class="glass-box-split" style="border-color: rgba(255, 0, 85, 0.4);">
+                    <div class="split-content anim-element" style="flex: 1;">
+                        <h1 class="neon-pink" style="font-size: 3.2rem;">O Fenômeno RAZR</h1>
+                        <h2 style="font-size: 2rem; color: #ccc;">(2004–2010)</h2>
+                        <p>O Motorola Razr V3 redefiniu o mercado com seu corpo ultrafino, estrutura metálica e tela colorida dupla, tornando-se um item de moda mundial.</p>
+                        
+                        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div style="font-size: 4rem; font-weight: 900; color: var(--pink); line-height: 1;">130M+</div>
+                            <div style="font-size: 1.1rem; color: #aaa; font-weight: 700; letter-spacing: 2px; margin-top: 5px;">VENDAS MUNDIAIS</div>
+                        </div>
+                    </div>
+                    <div class="split-content anim-element" style="flex: 1.2; border-left: 1px solid var(--glass-border); padding: 40px;">
+                        <h3 style="text-align: center; color: #fff; font-size: 1.4rem; font-weight: 400; margin-bottom: 20px;">Comparativo de Vendas (Milhões de Unidades)</h3>
+                        <div class="chart-container" style="height: 100%; margin: 0; min-height: 300px;">
+                            <canvas id="razrChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 8: SMARTPHONES -->
+            <div class="scene" id="cena-8" data-speech="A era Smart exigiu evolução. Surgiram as linhas consagradas Moto G, X, E e Z, democratizando a tecnologia de ponta.">
+                <div class="glass-box-split">
+                    <div class="img-showcase left anim-element" style="flex: 0.9;">
+                        <img src="img/ecossistema-smart.jpg" alt="Smartphones Motorola">
+                    </div>
+                    <div class="split-content anim-element" style="flex: 1.2;">
+                        <h1 style="font-size: 3.5rem;">A Era dos Smartphones</h1>
+                        <p style="color: var(--cyan); font-weight: 700; margin-bottom: 20px;">(2010–2020)</p>
+                        <p style="margin-bottom: 30px;">Em 2011, a empresa dividiu-se. A Motorola Mobility foi adquirida pelo Google e depois pela Lenovo, focando em sistemas otimizados.</p>
+                        
+                        <h3 style="color: #fff;">Linhas de Destaque</h3>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <div class="moto-badge" style="border-color: #2196F3;"><h3 style="color: #2196F3; margin:0;">Moto G</h3></div>
+                            <div class="moto-badge" style="border-color: #4CAF50;"><h3 style="color: #4CAF50; margin:0;">Moto X</h3></div>
+                            <div class="moto-badge" style="border-color: #FFC107;"><h3 style="color: #FFC107; margin:0;">Moto E</h3></div>
+                            <div class="moto-badge" style="border-color: #E91E63;"><h3 style="color: #E91E63; margin:0;">Moto Z</h3></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 9: ATUALIDADE -->
+            <div class="scene" id="cena-9" data-speech="Hoje, a Motorola lidera com IA, conectividade 5G ultrarrápida, telas dobráveis e segurança digital avançada.">
+                <div class="glass-box" style="padding: 40px; border-color: rgba(0, 229, 255, 0.4);">
+                    <h1 class="neon-cyan anim-element" style="font-size: 4rem;">Motorola na Atualidade</h1>
+                    <p class="anim-element" style="text-align: center; color: #fff;">Inovação Contínua (2020–Hoje)</p>
+                    
+                    <div class="flex-row anim-element" style="gap: 20px;">
+                        <div class="col">
+                            <div class="glass-panel" style="padding: 20px; border-top: 3px solid var(--cyan);">
+                                <div style="font-size: 3rem; margin-bottom: 10px; text-align: center;">🧠</div>
+                                <h3 style="color: var(--cyan); font-size: 1.4rem; text-align: center;">Inteligência Artificial</h3>
+                                <ul style="font-size: 1.2rem; padding-left: 20px;"><li>Câmeras inteligentes</li><li>Otimização de hardware</li></ul>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="glass-panel" style="padding: 20px; border-top: 3px solid var(--cyan);">
+                                <div style="font-size: 3rem; margin-bottom: 10px; text-align: center;">📶</div>
+                                <h3 style="color: var(--cyan); font-size: 1.4rem; text-align: center;">Redes 5G</h3>
+                                <ul style="font-size: 1.2rem; padding-left: 20px;"><li>Baixa latência global</li><li>Alta velocidade</li></ul>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="glass-panel" style="padding: 20px; border-top: 3px solid var(--cyan);">
+                                <div style="font-size: 3rem; margin-bottom: 10px; text-align: center;">📱</div>
+                                <h3 style="color: var(--cyan); font-size: 1.4rem; text-align: center;">Telas Dobráveis</h3>
+                                <ul style="font-size: 1.2rem; padding-left: 20px;"><li>OLED flexível (Razr)</li><li>Design inovador</li></ul>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="glass-panel" style="padding: 20px; border-top: 3px solid var(--cyan);">
+                                <div style="font-size: 3rem; margin-bottom: 10px; text-align: center;">🔒</div>
+                                <h3 style="color: var(--cyan); font-size: 1.4rem; text-align: center;">Segurança</h3>
+                                <ul style="font-size: 1.2rem; padding-left: 20px;"><li>ThinkShield</li><li>Biometria avançada</li></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENA 10: CONCLUSÃO -->
+            <div class="scene" id="cena-10" data-speech="Quase 100 anos conectando o mundo, dos rádios automotivos ao futuro dobrável. A Motorola continua viva e inovadora. Muito obrigado.">
+                <div class="glass-box" style="padding: 60px; border-color: rgba(0, 229, 255, 0.4);">
+                    <h1 class="neon-cyan anim-element" style="font-size: 5rem;">O Futuro Continua</h1>
+                    <p class="anim-element" style="margin: 30px auto; font-size: 1.8rem; max-width: 900px;">A história da Motorola representa a evolução das telecomunicações ao longo de quase 100 anos. Da corrida espacial ao bolso de milhões de pessoas.</p>
+                    <div class="anim-element" style="background: rgba(0,0,0,0.6); padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border); display: inline-block; max-width: 1000px; margin: 0 auto;">
+                        <p style="color: var(--cyan); font-weight: 700; font-size: 1.8rem; margin: 0;">Atualmente, investe em Inteligência Artificial, Redes 5G e dispositivos dobráveis, mantendo sua relevância e pioneirismo no topo da inovação mundial.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="hud"></div>
+
+    <script>
+        // 1. AUTO-AJUSTE
+        function autoScale() {
+            const master = document.getElementById('master-scale');
+            const scale = Math.min((window.innerWidth - 40) / 1600, (window.innerHeight - 40) / 900);
+            master.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('resize', autoScale);
+        autoScale();
+
+        // 2. CONFIGURAÇÕES GERAIS
+        const scenes = document.querySelectorAll('.scene');
+        const hud = document.getElementById('hud');
+        const speechText = document.getElementById('speech-text');
+        
+        let indexAtual = 0;
+        let chartInstance = null;
+        let isAnimating = false;
+
+        scenes.forEach((scene, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 0 ? ' ativo' : '');
+            dot.onclick = () => viajarPara(i);
+            hud.appendChild(dot);
+        });
+        const dots = document.querySelectorAll('.dot');
+
+        function iniciarMasterclass() {
+            gsap.to('#ignicao', { 
+                opacity: 0, scale: 1.5, duration: 1.2, ease: "power4.inOut",
+                onComplete: () => {
+                    document.getElementById('ignicao').style.display = 'none';
+                    if(document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen().catch(()=>{});
+                    }
+                    viajarPara(0, true);
+                }
+            });
+        }
+
+        // 3. NAVEGAÇÃO WARP
+        function viajarPara(index, direto = false) {
+            if (isAnimating || index < 0 || index >= scenes.length) return;
+            if (!direto && index === indexAtual) return;
+
+            isAnimating = true;
+            const cenaSaindo = scenes[indexAtual];
+            const direcao = index > indexAtual ? 1 : -1;
+            indexAtual = index;
+            const cenaEntrando = scenes[indexAtual];
+
+            dots.forEach((dot, i) => dot.classList.toggle('ativo', i === indexAtual));
+            speechText.innerText = cenaEntrando.getAttribute('data-speech');
+
+            const axisType = indexAtual % 3; 
+            let warpX = 0, warpY = 0, warpZ = 0, rotX = 0, rotY = 0, scaleOut = 1, scaleIn = 1;
+
+            if (axisType === 0) { warpX = 1500; rotY = 45; }
+            else if (axisType === 1) { warpY = 1000; rotX = -30; }
+            else { scaleOut = 0.2; scaleIn = 2; warpZ = 500; }
+
+            if (!direto) {
+                gsap.to(cenaSaindo, {
+                    x: -warpX * direcao, y: -warpY * direcao, z: -warpZ,
+                    rotationX: -rotX * direcao, rotationY: -rotY * direcao, scale: scaleOut,
+                    opacity: 0, duration: 1, ease: "power2.in",
+                    onComplete: () => {
+                        cenaSaindo.classList.remove('ativo');
+                        gsap.set(cenaSaindo, { clearProps: "all" }); 
+                        gsap.set(cenaSaindo.querySelectorAll('.anim-element'), { opacity: 0 }); 
+                    }
+                });
+            }
+
+            cenaEntrando.classList.add('ativo');
+            
+            let inicio = { opacity: 0 };
+            if (!direto) {
+                inicio = { x: warpX * direcao, y: warpY * direcao, z: warpZ, rotationX: rotX * direcao, rotationY: rotY * direcao, scale: scaleIn, opacity: 0 };
+            }
+
+            gsap.fromTo(cenaEntrando, inicio, {
+                x: 0, y: 0, z: 0, rotationX: 0, rotationY: 0, scale: 1, opacity: 1,
+                duration: 1.2, ease: "power3.out", delay: direto ? 0 : 0.8,
+                onComplete: () => {
+                    const elementos = cenaEntrando.querySelectorAll('.anim-element');
+                    if(elementos.length > 0) {
+                        gsap.fromTo(elementos, 
+                            { opacity: 0, y: 40, scale: 0.95 },
+                            { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.1, ease: "back.out(1.5)",
+                              onComplete: () => {
+                                  isAnimating = false;
+                                  if(indexAtual === 5) dispararContadores();
+                                  if(indexAtual === 7) renderizarGrafico(); 
+                              }
+                            }
+                        );
+                    } else {
+                        isAnimating = false;
+                    }
+                }
+            });
+        }
+
+        // 4. GATILHOS E GRÁFICOS
+        function dispararContadores() {
+            const contadores = document.querySelectorAll('.gsap-counter');
+            contadores.forEach(num => {
+                const target = parseFloat(num.getAttribute('data-target'));
+                let obj = { val: 0 };
+                gsap.to(obj, {
+                    val: target, duration: 2.5, ease: "power3.out",
+                    onUpdate: () => { num.innerText = Math.ceil(obj.val); }
+                });
+            });
+        }
+
+        function renderizarGrafico() {
+            const ctx = document.getElementById('razrChart');
+            if(!ctx) return;
+            
+            if(chartInstance) chartInstance.destroy();
+
+            Chart.defaults.font.family = 'Montserrat';
+            Chart.defaults.color = '#ccc';
+
+            chartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['StarTAC (96)', 'Série Moto G (13)', 'RAZR V3 (04)'],
+                    datasets: [{
+                        label: 'Vendas em Milhões',
+                        data: [0, 0, 0], 
+                        backgroundColor: ['#00e5ff', '#2979ff', '#ff0055'],
+                        borderRadius: 10,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { 
+                        duration: 1800, 
+                        easing: 'easeOutQuart' 
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, display: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { font: { size: 14 } },
+                            border: { display: false },
+                            suggestedMax: 140
+                        },
+                        x: { 
+                            display: true, grid: { display: false },
+                            ticks: { color: '#fff', font: { size: 14, weight: 'bold' } },
+                            border: { display: false }
+                        }
+                    },
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            enabled: true, backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 16 }, bodyFont: { size: 16, weight: 'bold' },
+                            padding: 15, displayColors: false
+                        } 
+                    }
+                }
+            });
+
+            setTimeout(() => {
+                chartInstance.data.datasets[0].data = [60, 100, 130];
+                chartInstance.update();
+            }, 100);
+        }
+
+        // 5. CONTROLES DE TECLADO
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') viajarPara(indexAtual + 1);
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') viajarPara(indexAtual - 1);
+            
+            if (e.key.toLowerCase() === 'n') {
+                const speechBox = document.getElementById('speech-notes');
+                if (speechBox.style.display === 'block') {
+                    gsap.to(speechBox, { opacity: 0, y: -20, duration: 0.3, onComplete: () => speechBox.style.display = 'none' });
+                } else {
+                    speechBox.style.display = 'block';
+                    gsap.fromTo(speechBox, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" });
+                }
+            }
+        });
+
+        // 6. SISTEMA NERVOSO: A LÓGICA DE ÁUDIO E VIBRAÇÃO DO CELULAR
+        // Assim que o documento carrega, ele pega a imagem e a fita cassete
+        const dynaImage = document.getElementById('img-dynatac');
+        const dynaAudio = document.getElementById('audio-dynatac');
+
+        if(dynaImage && dynaAudio) {
+            // Quando o mouse entra...
+            dynaImage.addEventListener('mouseenter', () => {
+                // ...dá o play. O .catch previne erros caso o navegador bloqueie áudio automático
+                dynaAudio.play().catch(erro => console.log('O navegador bloqueou o áudio.', erro));
+            });
+
+            // Quando o mouse sai...
+            dynaImage.addEventListener('mouseleave', () => {
+                // ...pausa e rebobina a fita para o segundo 0.
+                dynaAudio.pause();
+                dynaAudio.currentTime = 0;
+            });
+        }
+
+    </script>
+</body>
+</html>
