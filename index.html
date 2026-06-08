@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
-    
     <style>
         :root { 
             --cyan: #00e5ff; 
@@ -94,12 +92,10 @@
             transform: scale(1.04); 
         }
 
-        /* 1. SUPERPODER DE ZOOM */
         .img-showcase img.zoom-master {
             transform: scale(1.6); 
         }
         
-        /* 2. O MOTOR DE FÍSICA DA VIBRAÇÃO DO CELULAR */
         @keyframes vibrate-ring {
             0% { transform: scale(1.6) translate(0) rotate(0deg); }
             20% { transform: scale(1.6) translate(-2px, 2px) rotate(-2deg); }
@@ -109,9 +105,7 @@
             100% { transform: scale(1.6) translate(0) rotate(0deg); }
         }
 
-        /* Gatilho da vibração: ao passar o mouse */
         .img-showcase img.zoom-master.ringing:hover {
-            /* 0.1s é a velocidade do tremor, rápido igual motor de celular */
             animation: vibrate-ring 0.1s linear infinite; 
             cursor: pointer;
         }
@@ -190,20 +184,15 @@
 </head>
 <body>
 
-    <!-- AQUI ESTÁ O RÁDIO INVISÍVEL -->
-    <!-- Se o seu áudio não for .mp3 (for .wav por exemplo), mude apenas o final do src abaixo -->
     <audio id="audio-dynatac" src="toque 8000X.mpeg" loop preload="auto"></audio>
 
     <div id="bg-lights"></div>
 
     <div id="ignicao">
         <h1 class="neon-cyan" style="font-size: 5rem; margin-bottom: 20px;">MOTOROLA</h1>
-        <!--p style="font-size: 1.8rem; color: #aaa; margin-bottom: 50px; letter-spacing: 4px; text-transform: uppercase;">Cinematic Masterclass</p-->
         <button class="btn-start" onclick="iniciarMasterclass()">Iniciar Jornada</button>
-        <!-- p style="margin-top: 40px; color: #666; font-size: 1.2rem;">(Pressione 'N' para ler seu roteiro durante a apresentação)</p-->
     </div>
 
-    <!-- HUD DE ROTEIRO -->
     <div id="speech-notes">
         <strong style="color: var(--cyan); display: block; margin-bottom: 15px; font-size: 1.2rem; letter-spacing: 2px;">🎙️ ROTEIRO DO APRESENTADOR:</strong>
         <span id="speech-text"></span>
@@ -212,9 +201,18 @@
     <div id="screen-container">
         <div id="master-scale">
             
-            <!-- CENA 0: INTRODUÇÃO -->
             <div class="scene" id="cena-0" data-speech="Boa noite a todos. Convido vocês a uma jornada imersiva pela história da Motorola. Uma empresa cuja trajetória se confunde com a própria evolução das comunicações modernas.">
                 <div class="glass-box">
+                    
+                    <div class="anim-element" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 35px; padding-bottom: 25px; border-bottom: 1px solid var(--glass-border); width: 100%; text-align: center;">
+                        <div style="font-size: 1rem; color: #cbd5e1;"><b>Arthur Henrique Aleixo Jordão</b> <br> <span style="color: var(--cyan); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px;">RA: 5174229</span></div>
+                        <div style="font-size: 1rem; color: #cbd5e1;"><b>Eduardo Miranda Simões Brizolla</b> <br> <span style="color: var(--cyan); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px;">RA: 5181865</span></div>
+                        <div style="font-size: 1rem; color: #cbd5e1;"><b>Helder Aidar G. Pedroza Furtado</b> <br> <span style="color: var(--cyan); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px;">RA: 5181737</span></div>
+                        <div style="font-size: 1rem; color: #cbd5e1;"><b>João Victor Oliveira dos Santos</b> <br> <span style="color: var(--cyan); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px;">RA: 5182036</span></div>
+                        <div style="font-size: 1rem; color: #cbd5e1;"><b>Kauã Raysson de Freitas Donato</b> <br> <span style="color: var(--cyan); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px;">RA: 5179091</span></div>
+                        <div style="font-size: 1rem; color: #cbd5e1;"><b>Matheus Santana Alves</b> <br> <span style="color: var(--cyan); font-size: 0.85rem; font-weight: 700; letter-spacing: 1px;">RA: 5180883</span></div>
+                    </div>
+
                     <div class="floating-icon anim-element">🚀</div>
                     <h1 class="neon-cyan anim-element">A História da Motorola</h1>
                     <h2 class="anim-element">Evolução Tecnológica ao Longo do Tempo</h2>
@@ -222,7 +220,6 @@
                 </div>
             </div>
 
-            <!-- CENA 1: FUNDAÇÃO -->
             <div class="scene" id="cena-1" data-speech="Tudo começou em 1928, com os irmãos Paul e Joseph Galvin. Eles criaram algo revolucionário: rádios automotivos acessíveis. Numa época em que rádio era luxo, eles democratizaram o som nos carros.">
                 <div class="glass-box-split" style="border-color: rgba(41, 121, 255, 0.4);">
                     <div class="split-content anim-element">
@@ -244,7 +241,6 @@
                 </div>
             </div>
 
-            <!-- CENA 2: A GUERRA -->
             <div class="scene" id="cena-2" data-speech="Nos anos 40, o mundo estava em guerra. O Handie-Talkie SCR-536 melhorou a comunicação das tropas e provou que o futuro exigia mobilidade.">
                 <div class="glass-box-split" style="border-color: rgba(76, 175, 80, 0.4);">
                     <div class="img-showcase left anim-element">
@@ -264,7 +260,6 @@
                 </div>
             </div>
 
-            <!-- CENA 3: TV E PAGER -->
             <div class="scene" id="cena-3" data-speech="Após a guerra, o marco ocorreu em 1956: o lançamento do primeiro pager comercial do mundo. Nascia a era da comunicação pessoal móvel.">
                 <div class="glass-box">
                     <h1 class="anim-element" style="font-size: 4rem;">Televisão e Eletrônicos</h1>
@@ -291,7 +286,6 @@
                 </div>
             </div>
 
-            <!-- CENA 4: O ESPAÇO -->
             <div class="scene" id="cena-4" data-speech="Em 1969, a transmissão do primeiro passo de Neil Armstrong na Lua foi realizada com tecnologia da Motorola. O céu não era mais o limite.">
                 <div class="glass-box-split" style="border-color: #fff;">
                     <div class="split-content anim-element">
@@ -309,11 +303,9 @@
                 </div>
             </div>
 
-            <!-- CENA 5: O CELULAR (AGORA COM ID E CLASSES DE ANIMAÇÃO) -->
             <div class="scene" id="cena-5" data-speech="Em 1973, Martin Cooper faz a primeira chamada de um celular. O DynaTAC pesava um quilo, mas mudou a história da humanidade.">
                 <div class="glass-box-split" style="border-color: rgba(255, 0, 85, 0.4);">
                     <div class="img-showcase left anim-element" style="flex: 0.9;">
-                        <!-- O ID é necessário pro JS achar. As classes dão o tamanho e a vibração -->
                         <img src="primeiro-celular.png" alt="Primeiro Celular DynaTAC" id="img-dynatac" class="zoom-master ringing">
                     </div>
                     <div class="split-content anim-element" style="flex: 1.3;">
@@ -340,7 +332,6 @@
                 </div>
             </div>
 
-            <!-- CENA 6: STARTAC -->
             <div class="scene" id="cena-6" data-speech="Nos anos 90, o StarTAC dominou o mundo. O primeiro celular flip: compacto, leve e revolucionário.">
                 <div class="glass-box-split" style="border-color: rgba(0, 229, 255, 0.4);">
                     <div class="split-content anim-element">
@@ -363,7 +354,6 @@
                 </div>
             </div>
 
-            <!-- CENA 7: RAZR V3 -->
             <div class="scene" id="cena-7" data-speech="Em 2004, a Motorola redefiniu o design com o RAZR V3. Um artigo de luxo ultrafino que vendeu mais de 130 milhões de unidades.">
                 <div class="glass-box-split" style="border-color: rgba(255, 0, 85, 0.4);">
                     <div class="split-content anim-element" style="flex: 1;">
@@ -385,7 +375,6 @@
                 </div>
             </div>
 
-            <!-- CENA 8: SMARTPHONES -->
             <div class="scene" id="cena-8" data-speech="A era Smart exigiu evolução. Surgiram as linhas consagradas Moto G, X, E e Z, democratizando a tecnologia de ponta.">
                 <div class="glass-box-split">
                     <div class="img-showcase left anim-element" style="flex: 0.9;">
@@ -407,7 +396,6 @@
                 </div>
             </div>
 
-            <!-- CENA 9: ATUALIDADE -->
             <div class="scene" id="cena-9" data-speech="Hoje, a Motorola lidera com IA, conectividade 5G ultrarrápida, telas dobráveis e segurança digital avançada.">
                 <div class="glass-box" style="padding: 40px; border-color: rgba(0, 229, 255, 0.4);">
                     <h1 class="neon-cyan anim-element" style="font-size: 4rem;">Motorola na Atualidade</h1>
@@ -446,7 +434,6 @@
                 </div>
             </div>
 
-            <!-- CENA 10: CONCLUSÃO -->
             <div class="scene" id="cena-10" data-speech="Quase 100 anos conectando o mundo, dos rádios automotivos ao futuro dobrável. A Motorola continua viva e inovadora. Muito obrigado.">
                 <div class="glass-box" style="padding: 60px; border-color: rgba(0, 229, 255, 0.4);">
                     <h1 class="neon-cyan anim-element" style="font-size: 5rem;">O Futuro Continua</h1>
@@ -463,7 +450,6 @@
     <div id="hud"></div>
 
     <script>
-        // 1. AUTO-AJUSTE
         function autoScale() {
             const master = document.getElementById('master-scale');
             const scale = Math.min((window.innerWidth - 40) / 1600, (window.innerHeight - 40) / 900);
@@ -472,7 +458,6 @@
         window.addEventListener('resize', autoScale);
         autoScale();
 
-        // 2. CONFIGURAÇÕES GERAIS
         const scenes = document.querySelectorAll('.scene');
         const hud = document.getElementById('hud');
         const speechText = document.getElementById('speech-text');
@@ -502,7 +487,6 @@
             });
         }
 
-        // 3. NAVEGAÇÃO WARP
         function viajarPara(index, direto = false) {
             if (isAnimating || index < 0 || index >= scenes.length) return;
             if (!direto && index === indexAtual) return;
@@ -566,7 +550,6 @@
             });
         }
 
-        // 4. GATILHOS E GRÁFICOS
         function dispararContadores() {
             const contadores = document.querySelectorAll('.gsap-counter');
             contadores.forEach(num => {
@@ -637,7 +620,6 @@
             }, 100);
         }
 
-        // 5. CONTROLES DE TECLADO
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') viajarPara(indexAtual + 1);
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') viajarPara(indexAtual - 1);
@@ -653,21 +635,15 @@
             }
         });
 
-        // 6. SISTEMA NERVOSO: A LÓGICA DE ÁUDIO E VIBRAÇÃO DO CELULAR
-        // Assim que o documento carrega, ele pega a imagem e a fita cassete
         const dynaImage = document.getElementById('img-dynatac');
         const dynaAudio = document.getElementById('audio-dynatac');
 
         if(dynaImage && dynaAudio) {
-            // Quando o mouse entra...
             dynaImage.addEventListener('mouseenter', () => {
-                // ...dá o play. O .catch previne erros caso o navegador bloqueie áudio automático
-                dynaAudio.play().catch(erro => console.log('O navegador bloqueou o áudio.', erro));
+                dynaAudio.play().catch(erro => console.log(erro));
             });
 
-            // Quando o mouse sai...
             dynaImage.addEventListener('mouseleave', () => {
-                // ...pausa e rebobina a fita para o segundo 0.
                 dynaAudio.pause();
                 dynaAudio.currentTime = 0;
             });
